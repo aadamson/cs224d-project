@@ -5,29 +5,6 @@ from scrapy.contrib.linkextractors import LinkExtractor
 
 from reviewscraping.items import ReviewItem
 
-import re
-
-def extract_product_id(raw):
-    matches = re.match('B00[A-Z0-9]{7}', raw)
-
-    if matches is None:
-        return None
-
-    return matches.group(0)
-
-def review_selector_to_item(sel):
-    item = ReviewItem()
-
-    item['site']          = 'amazon'
-    item['site_id']       = sel.xpath('@id').extract()[0]
-    item['stars']         = sel.xpath('.//i[contains(concat(\' \', @class, \' \'), \'review-rating\')]/span/text()').extract()[0]
-    item['title']         = sel.xpath('.//a[contains(concat(\' \', @class, \' \'), \'review-title\')]/text()').extract()[0]
-    item['text']          = sel.xpath('.//span[contains(concat(\' \', @class, \' \'), \'review-text\')]/text()').extract()[0]
-    item['link']          = sel.xpath('.//a[contains(concat(\' \', @class, \' \'), \'review-title\')]/@href').extract()[0]
-    item['knowledgeable'] = len(sel.xpath('./span[text()=\'Verified Purchase\']')) == 1
-
-    return item
-
 class AmazonSpider(CrawlSpider):
     name = "amazon"
     allowed_domains = ["amazon.com"]
@@ -54,12 +31,21 @@ class AmazonSpider(CrawlSpider):
         for link in response.xpath('//a[contains(@href, \'/product/\')]'):
             rel_path = link.xpath('@href').extract()[0]
             full_path = "http://www.amazon.com" + rel_path
-            product_id = extract_product_id(full_path.split('/')[5])
-            print product_id
-            if not product_id is not None and not product_id in self.crawled_product_ids:
+            product_id = full_path.split('/')[5]
+            if not product_id in self.crawled_product_ids:
                 self.crawled_product_ids.add(product_id)
                 yield scrapy.Request(full_path, callback=self.parse)
 
         # Parse reviews found on page into items
         for sel in response.xpath('//div[contains(concat(\' \', @class, \' \'), \' review \')]'):
-            yield review_selector_to_item(sel)
+            item = ReviewItem()
+
+            item['site_id']       = sel.xpath('@id').extract()
+            item['site']          = 'amazon'
+            item['stars']         = sel.xpath('.//i[contains(concat(\' \', @class, \' \'), \'review-rating\')]/span/text()').extract()
+            item['title']         = sel.xpath('.//a[contains(concat(\' \', @class, \' \'), \'review-title\')]/text()').extract()
+            item['text']          = sel.xpath('.//span[contains(concat(\' \', @class, \' \'), \'review-text\')]/text()').extract()
+            item['link']          = sel.xpath('.//a[contains(concat(\' \', @class, \' \'), \'review-title\')]/@href').extract()
+            item['knowledgeable'] = len(sel.xpath('./span[text()=\'Verified Purchase\']')) == 1
+
+            yield item
