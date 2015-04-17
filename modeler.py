@@ -2,7 +2,6 @@ from text_stream import JsonStream
 import gensim
 from gensim.models import word2vec, Phrases
 import glob
-from nltk.corpus import shakespeare
 import argparse
 
 class Modeler(object):
