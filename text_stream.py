@@ -55,6 +55,6 @@ class JsonStream(TextStream):
             self.curItemIdx += 1
 
 
-        cur_text = cur_item['text'].encode('utf8').replace('\\n', ' ')
+        cur_text = cur_item['text'].encode('ascii', errors='ignore').replace('\\n', ' ')
         scrubbed_text = cur_text.lower().split(' ')
         return scrubbed_text
