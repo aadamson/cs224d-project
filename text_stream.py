@@ -11,6 +11,7 @@ class TextStream(object):
             return
 
         next_path = self.filePaths.pop(0)
+        print next_path
         self.curFile = open(next_path)
 
     def __iter__(self):
