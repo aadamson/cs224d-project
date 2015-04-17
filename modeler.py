@@ -20,7 +20,7 @@ class Word2VecModeler(Modeler):
 
     def make_model(self, corpora):
         #bigram_transformed = gensim.models.Phrases(corpora)
-        self.model = word2vec.Word2Vec(corpora, size=10, window=5, min_count=5, workers=4)
+        self.model = word2vec.Word2Vec(corpora, size=100, window=5, min_count=5, workers=8)
 
     def save(self, fname):
         if self.model is not None:
